@@ -22,11 +22,18 @@
         <g-gantt-timeaxis v-if="!hideTimeaxis">
           <template #upper-timeunit="{ label, value, date }">
             <!-- expose upper-timeunit slot of g-gantt-timeaxis-->
-            <slot name="upper-timeunit" :label="label" :value="value" :date="date" />
+             {{ formatYear(label) }}
           </template>
           <template #timeunit="{ label, value, date }">
             <!-- expose timeunit slot of g-gantt-timeaxis-->
-            <slot name="timeunit" :label="label" :value="value" :date="date" />
+            <p :class="{
+              'custom-line-height': true, 
+              red: formatDay(date) === '日', 
+              blue: formatDay(date) === '土'}">
+              {{ formatDay(date) }}
+              <br>
+              {{ formatDate(label) }}
+            </p>
           </template>
         </g-gantt-timeaxis>
         <g-gantt-grid v-if="grid" :highlighted-units="highlightedUnits" />
@@ -41,11 +48,11 @@
         </div>
       </div>
     </div>
-    <g-gantt-bar-tooltip :model-value="showTooltip || isDragging" :bar="tooltipBar">
+    <!-- <g-gantt-bar-tooltip :model-value="showTooltip || isDragging" :bar="tooltipBar">
       <template #default>
         <slot name="bar-tooltip" :bar="tooltipBar" />
       </template>
-    </g-gantt-bar-tooltip>
+    </g-gantt-bar-tooltip> -->
   </div>
 </template>
 
@@ -110,6 +117,33 @@ export type GGanttChartConfig = ToRefs<Required<GGanttChartProps>> & {
   }
 }
 
+const formatYear = (month: string): string => {
+  const [monthName, year] = month.split(" ");
+  return `${year}年${monthName}`;
+}
+
+const formatDay = (day: Date ): string => {
+  const dayMap: Record<string, string> = {
+    Mon: "月", // Monday
+    Tue: "火", // Tuesday
+    Wed: "水", // Wednesday
+    Thu: "木", // Thursday
+    Fri: "金", // Friday
+    Sat: "土", // Saturday
+    Sun: "日", // Sunday
+  };
+
+  const dateStr = day.toString(); // e.g., "Mon Jan 27 2025 00:00:00 GMT+0800"
+  const dayAbbreviation = dateStr.split(" ")[0]; // e.g., "Mon"
+  const japaneseDay = dayMap[dayAbbreviation] || dayAbbreviation; // Default to the original if not found
+  return japaneseDay;
+  
+}
+
+const formatDate = (date: string): number =>{
+  const dayString = date.trim().split(".")[0]; // Extracts "01"
+  return parseInt(dayString, 10); // Convert "01" to 1
+}
 const props = withDefaults(defineProps<GGanttChartProps>(), {
   currentTimeLabel: "",
   dateFormat: DEFAULT_DATE_FORMAT,
@@ -120,7 +154,7 @@ const props = withDefaults(defineProps<GGanttChartProps>(), {
   grid: false,
   pushOnOverlap: false,
   noOverlap: false,
-  rowHeight: 40,
+  rowHeight: 28,
   highlightedUnits: () => [],
   font: "inherit",
   labelColumnTitle: "",
@@ -272,7 +306,6 @@ provide(EMIT_BAR_EVENT_KEY, emitBarEvent)
   -webkit-touch-callout: none;
   user-select: none;
   font-variant-numeric: tabular-nums;
-  border-radius: 5px;
 }
 
 .with-column {
@@ -290,4 +323,14 @@ provide(EMIT_BAR_EVENT_KEY, emitBarEvent)
   display: flex;
   flex-direction: row;
 }
+.red {
+   color:red
+}
+.blue{
+  color: #06a9e5
+}
+.custom-line-height{
+  line-height: 1.2em !important;
+}
+
 </style>

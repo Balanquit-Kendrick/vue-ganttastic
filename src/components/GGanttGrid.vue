@@ -1,4 +1,6 @@
 <template>
+  <div class="task-row">  
+  </div>
   <div class="g-grid-container">
     <div
       v-for="{ label, value, width } in timeaxisUnits.lowerUnits"
@@ -34,7 +36,9 @@ const { timeaxisUnits } = useTimeaxisUnits()
   display: flex;
   justify-content: space-between;
 }
-
+/* task row */
+.task-row{
+}
 .g-grid-line {
   width: 1px;
   height: 100%;

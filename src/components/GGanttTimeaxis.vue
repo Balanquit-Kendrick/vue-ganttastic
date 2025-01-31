@@ -52,6 +52,9 @@ const { timeaxisUnits } = useTimeaxisUnits()
 </script>
 
 <style>
+/* Task title */
+.task-title-row{
+}
 .g-timeaxis {
   position: sticky;
   top: 0;

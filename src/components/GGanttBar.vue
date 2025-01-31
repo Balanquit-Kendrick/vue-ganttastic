@@ -26,7 +26,7 @@
         <div v-if="barConfig.html" v-html="barConfig.html"/>
       </slot>
     </div>
-    <template v-if="barConfig.hasHandles">
+    <template v-if="barConfig">
       <div class="g-gantt-bar-handle-left" />
       <div class="g-gantt-bar-handle-right" />
     </template>
@@ -88,6 +88,7 @@ const prepareForDrag = () => {
 const barContainerEl = inject(BAR_CONTAINER_KEY)
 
 const onMouseEvent = (e: MouseEvent) => {
+  
   e.preventDefault()
   if (e.type === "mousedown") {
     prepareForDrag()
@@ -124,6 +125,7 @@ onMounted(() => {
   align-items: center;
   background: cadetblue;
   overflow: hidden;
+  border-radius: 5px;
 }
 
 .g-gantt-bar-label {
@@ -134,6 +136,7 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
+  display: none
 }
 .g-gantt-bar-label > * {
   white-space: nowrap;
@@ -143,7 +146,7 @@ onMounted(() => {
 .g-gantt-bar-handle-left,
 .g-gantt-bar-handle-right {
   position: absolute;
-  width: 10px;
+  width: 3px;
   height: 100%;
   background: white;
   opacity: 0.7;

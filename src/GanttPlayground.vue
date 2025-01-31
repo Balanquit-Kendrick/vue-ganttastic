@@ -1,9 +1,39 @@
 <template>
+  <table class="data">
+    <thead>
+      <tr>
+        <th class="title">Title</th>
+        <th class="manager">Manager</th>
+        <th class="label">Label</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Loop through flattened data -->
+      <tr v-for="(item, index) in flattenedData" :key="index">
+        <td :style="{ paddingLeft: `${item.level * 20}px` }" class="title">
+          {{ item.title }}
+        </td>
+        <td class="manager">{{ item.type === 'task' ? item.managers.join(', ') : '' }}</td>
+        <td class="label">{{ item.type === 'task' ? item.labels.join(', ') : '' }}</td>
+      </tr>
+    </tbody>
+  </table>
+  <!-- <div class="task-title">
+    <div class="title">Title</div>
+    <div class="manager">担当者</div>
+    <div class="label">ラベル</div>
+  </div>
+  <div class="task-component">
+    <div class="title">Folder</div>
+    <div class="manager">担当者</div>
+    <div class="label">ラベル</div>
+  </div> -->
   <g-gantt-chart
+    class="gantt-chart"
     :chart-start="chartStart"
     :chart-end="chartEnd"
-    precision="week"
-    :row-height="40"
+    precision="day"
+    :row-height="28"
     grid
     current-time
     width="100%"
@@ -19,8 +49,9 @@
     @drag-bar="onDragBar($event.bar, $event.e)"
     @dragend-bar="onDragendBar($event.bar, $event.e, $event.movedBars)"
     @contextmenu-bar="onContextmenuBar($event.bar, $event.e, $event.datetime)"
-  >
+  > 
     <g-gantt-row label="My row to test" :bars="bars1" highlight-on-hover />
+    <g-gantt-row label="My another new row to test" highlight-on-hover :bars="bars2" />
     <g-gantt-row label="My another new row to test" highlight-on-hover :bars="bars2" />
     <g-gantt-row label="just another row to test gantt" highlight-on-hover :bars="bars3" />
     <g-gantt-row
@@ -29,26 +60,175 @@
       :bars="bars4"
     />
   </g-gantt-chart>
-
-  <button type="button" @click="addBar()">Add bar</button>
-  <button type="button" @click="deleteBar()">Delete bar</button>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
+import { ref, watch, computed } from "vue"
 import type { GanttBarObject } from "./types"
 import dayjs from "dayjs"
 
+function formatDate(date: string): string {
+  return dayjs(date, format.value).startOf("day").format(format.value);
+}
+
+interface Label {
+  label_id: string;
+  name: string;
+}
+
+interface Manager {
+  user_id: string;
+  name: string;
+}
+
+interface Task {
+  task_id: string;
+  name: string;
+  labels?: Label[];
+  managers?: Manager[];
+}
+
+interface Board {
+  board_id: string;
+  name: string;
+  tasks?: Task[];
+}
+
+interface Room {
+  room_id: string;
+  name: string;
+  boards?: Board[];
+}
+
+interface Folder {
+  name: string;
+  rooms: Room[];
+}
+
+interface FlattenedItem {
+  title: string;
+  type: 'folder' | 'room' | 'board' | 'task';
+  level: number; // Indentation level
+  managers?: string[];
+  labels?: string[];
+}
+
+const flattenedData = computed<FlattenedItem[]>(() => {
+      const data: FlattenedItem[] = []; // Explicitly type the 'data' array
+      folder.value.forEach((folder) => {
+        // Add folder row
+        data.push({
+          title: folder.name,
+          type: 'folder',
+          level: 0,
+        });
+
+        folder.rooms.forEach((room) => {
+          // Add room row
+          data.push({
+            title: `${room.name}`,
+            type: 'room',
+            level: 1,
+          });
+
+          if (room.boards) {
+            room.boards.forEach((board) => {
+              // Add board row
+              data.push({
+                title: `${board.name}`,
+                type: 'board',
+                level: 2,
+              });
+
+              if (board.tasks) {
+                board.tasks.forEach((task) => {
+                  // Add task row
+                  data.push({
+                    title: `${task.name}`,
+                    type: 'task',
+                    level: 3,
+                    managers: task.managers
+                      ? task.managers.map((manager) => manager.name)
+                      : [], // Handle missing managers
+                    labels: task.labels
+                      ? task.labels.map((label) => label.name)
+                      : [], // Handle missing labels
+                  });
+                });
+              }
+            });
+          }
+        });
+      });
+      return data;
+    });
+
 const format = ref("DD.MM.YYYY HH:mm")
-const chartStart = ref(dayjs().startOf("day").format(format.value))
-const chartEnd = ref(
-  dayjs(chartStart.value, format.value).add(3, "days").hour(12).format(format.value)
-)
+const chartStart = ref(dayjs().startOf("month").format(format.value))
+const chartEnd = ref(dayjs().endOf("month").format(format.value))
+// const chartEnd = ref(
+//   dayjs(chartStart.value, format.value).add(3, "days").hour(12).format(format.value)
+// )
+const folder = ref<Folder[]>([
+      {
+        name: 'Test Folder',
+        rooms: [
+          {
+            room_id: '111',
+            name: 'Test Room 1',
+            boards: [
+              {
+                board_id: '121',
+                name: 'Test Board 1',
+                tasks: [
+                  {
+                    task_id: '211',
+                    name: 'Test Task 1',
+                    labels: [
+                      { label_id: '111', name: '1' },
+                      { label_id: '121', name: '2' },
+                    ],
+                    managers: [
+                      { user_id: '1234', name: '1' },
+                      { user_id: '1234', name: '2' },
+                    ],
+                  },
+                  {
+                    task_id: '221',
+                    name: 'Test Task 2',
+                    labels: [
+                      { label_id: '111', name: '1' },
+                      { label_id: '121', name: '2' },
+                    ],
+                    managers: [
+                      { user_id: '1234', name: '1' },
+                      { user_id: '1234', name: '2' },
+                    ],
+                  },
+                ],
+              },
+              {
+                board_id: '122',
+                name: 'Test Board 2',
+                tasks: [
+                  { task_id: '212', name: 'Test Task 1' },
+                  { task_id: '222', name: 'Test Task 2' },
+                ],
+              },
+            ],
+          },
+          {
+            room_id: '222',
+            name: 'Test Room 2',
+          },
+        ],
+      },
+    ]);
 
 const bars1 = ref<GanttBarObject[]>([
   {
-    beginDate: dayjs().hour(13).startOf("hour").format(format.value),
-    endDate: dayjs().hour(19).startOf("hour").format(format.value),
+    beginDate: dayjs().startOf("day").format(format.value),
+    endDate: dayjs().add(2, "day").endOf("day").format(format.value),
     ganttBarConfig: {
       id: "8621987329",
       label: "I'm in a bundle",
@@ -71,7 +251,7 @@ const bars2 = ref([
     }
   },
   {
-    beginDate: dayjs().add(2, "day").hour(0).startOf("hour").format(format.value),
+    beginDate: "15.01.2025 00:00",
     endDate: dayjs().add(2, "day").hour(19).startOf("hour").format(format.value),
     ganttBarConfig: {
       id: "7716981641",
@@ -98,10 +278,10 @@ const bars2 = ref([
   }
 ])
 
-const bars3 = [
+const bars3 = ref([
   {
-    beginDate: "15.01.2024 08:30",
-    endDate: "20.02.2024 16:45",
+    beginDate: "15.01.2025 08:30",
+    endDate: "20.01.2025 16:45",
     ganttBarConfig: {
       id: "9876543210",
       label: "Updated Bundle",
@@ -137,7 +317,7 @@ const bars3 = [
       }
     }
   }
-]
+])
 
 const bars4 = [
   {
@@ -196,31 +376,33 @@ const deleteBar = () => {
 }
 
 const onClickBar = (bar: GanttBarObject, e: MouseEvent, datetime?: string) => {
-  console.log("click-bar", bar, e, datetime)
+  // console.log("click-bar", bar, e, datetime)
 }
 
 const onMousedownBar = (bar: GanttBarObject, e: MouseEvent, datetime?: string) => {
-  console.log("mousedown-bar", bar, e, datetime)
+  // console.log("mousedown-bar", bar, e, datetime)
 }
 
 const onMouseupBar = (bar: GanttBarObject, e: MouseEvent, datetime?: string) => {
-  console.log("mouseup-bar", bar, e, datetime)
+  // console.log("mouseup-bar", bar, e, datetime)
 }
 
 const onMouseenterBar = (bar: GanttBarObject, e: MouseEvent) => {
-  console.log("mouseenter-bar", bar, e)
+  // console.log("mouseenter-bar", bar, e)
 }
 
 const onMouseleaveBar = (bar: GanttBarObject, e: MouseEvent) => {
-  console.log("mouseleave-bar", bar, e)
+  // console.log("mouseleave-bar", bar, e)
 }
 
 const onDragstartBar = (bar: GanttBarObject, e: MouseEvent) => {
-  console.log("dragstart-bar", bar, e)
+  // console.log("dragstart-bar", bar, e)
 }
 
 const onDragBar = (bar: GanttBarObject, e: MouseEvent) => {
-  console.log("drag-bar", bar, e)
+  bar.beginDate = formatDate(bar.beginDate);
+  bar.endDate = formatDate(bar.endDate);
+  // console.log("drag-bar", bar, e)
 }
 
 const onDragendBar = (
@@ -228,10 +410,57 @@ const onDragendBar = (
   e: MouseEvent,
   movedBars?: Map<GanttBarObject, { oldStart: string; oldEnd: string }>
 ) => {
-  console.log("dragend-bar", bar, e, movedBars)
+  // console.log("dragend-bar", bar, e, movedBars)
 }
 
 const onContextmenuBar = (bar: GanttBarObject, e: MouseEvent, datetime?: string) => {
-  console.log("contextmenu-bar", bar, e, datetime)
+  // console.log("contextmenu-bar", bar, e, datetime)
 }
 </script>
+
+<style>
+.gantt-chart {
+  width:80%;
+  position:absolute;
+  right:0;
+}
+.data {
+  width:20%;
+  position:absolute;
+  left:0;
+  margin-top: 52px
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%; /* Ensure table takes full width */
+  }
+
+  /* Reset cell padding and margin */
+  td, th {
+    padding: 0;
+    margin: 0;
+  }
+
+  /* Apply styles to table cells */
+  .title {
+    width: 70%;
+    height: 28px;
+    border: 1px solid red;
+    box-sizing: border-box; /* Include border in width calculation */
+  }
+
+  .manager {
+    width: 15%;
+    height: 25px;
+    border: 1px solid red;
+    box-sizing: border-box; /* Include border in width calculation */
+  }
+
+  .label {
+    width: 15%;
+    height: 25px;
+    border: 1px solid red;
+    box-sizing: border-box; /* Include border in width calculation */
+  }
+</style>

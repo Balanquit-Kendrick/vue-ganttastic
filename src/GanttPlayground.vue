@@ -13,8 +13,8 @@
         <td :style="{ paddingLeft: `${item.level * 20}px` }" class="title">
           {{ item.title }}
         </td>
-        <td class="manager">{{ item.type === 'task' ? item.managers.join(', ') : '' }}</td>
-        <td class="label">{{ item.type === 'task' ? item.labels.join(', ') : '' }}</td>
+        <td class="manager">{{ item.type === 'task' ? item.managers?.join(', ') : '' }}</td>
+        <td class="label">{{ item.type === 'task' ? item.labels?.join(', ') : '' }}</td>
       </tr>
     </tbody>
   </table>

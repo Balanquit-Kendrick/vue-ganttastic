@@ -8,7 +8,7 @@
     <div
       class="g-grid-current-time-marker"
       :style="{
-        border: `1px dashed ${colors.markerCurrentTime}`
+        border: `1px solid ${colors.markerCurrentTime}`
       }"
     />
     <span class="g-grid-current-time-text" :style="{ color: colors.markerCurrentTime }">
@@ -45,8 +45,24 @@ const xDist = computed(() => {
 
 .g-grid-current-time-marker {
   width: 0px;
-  height: calc(100% - 2px);
+  height: calc(100% - 78px);
   display: flex;
+  margin-top: 78px;
+}
+.g-grid-current-time-marker:after {
+  position: absolute;
+  right: 5px;
+  margin-right:-1.5px;
+  top: 78px;
+  height: 5px;
+  width: 5px;
+  background: red;
+  content: "";
+  border-radius: 5px;
+}
+.g-grid-current-time-marker:after {
+    right: 0; 
+    left: auto;
 }
 
 .g-grid-current-time-text {

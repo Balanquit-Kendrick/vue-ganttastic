@@ -21,7 +21,7 @@ export const colorSchemes: Record<string, ColorScheme> = {
     ternary: "#F5F5F5",
     quartenary: "#ededed",
     hoverHighlight: "rgba(204, 216, 219, 0.5)",
-    markerCurrentTime: "#000",
+    markerCurrentTime: "#FF0000",
     text: "#404040",
     background: "white"
   },
